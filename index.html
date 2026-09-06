@@ -155,7 +155,7 @@
            วิธีใช้: deploy Apps Script เป็น Web App (Execute as: me · Who has access: Anyone)
            แล้วนำลิงก์ที่ลงท้าย /exec มาวางที่ APPS_SCRIPT_URL ด้านล่าง
         ============================================================ */
-        const APPS_SCRIPT_URL = '';   // <<<< วางลิงก์ Apps Script Web App (/exec) ที่นี่
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_YBfU0WmIschbS7RcZfmP7jxSeePDBnzQm8nOHSZC9OEio5NSxCY84zjdQblV1AK5Aw/exec';   // <<<< วางลิงก์ Apps Script Web App (/exec) ที่นี่
         const submitResultToSheet = async (payload) => {
             if (!APPS_SCRIPT_URL) return { ok: false, reason: 'no-url' };
             try {
