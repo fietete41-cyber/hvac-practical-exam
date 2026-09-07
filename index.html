@@ -13,27 +13,67 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        html { background-color: #071a33; }
+        /* ================= ธีมสว่าง โทนฟ้าน้ำเงินเข้ม ================= */
+        :root { color-scheme: light; }
+        html { background-color: #f2f7ff; }
         body {
             font-family: 'Sarabun', 'Inter', sans-serif;
-            color: #eef6ff;
+            color: #16233b;
             overflow-x: hidden;
-            background-color: #071a33;
+            background-color: #ffffff;
             background-image:
-                radial-gradient(1100px 600px at 12% -8%, rgba(56,189,248,0.20), transparent 60%),
-                radial-gradient(1000px 620px at 92% 8%, rgba(37,99,235,0.22), transparent 62%),
-                linear-gradient(180deg, #0a2244 0%, #061428 100%);
+                radial-gradient(1000px 640px at 12% 104%, rgba(29,78,216,0.40), transparent 60%),
+                radial-gradient(1000px 620px at 92% 108%, rgba(14,165,233,0.32), transparent 58%),
+                linear-gradient(180deg, #ffffff 0%, #eff6ff 16%, #cadefb 52%, #8fb9ef 100%);
             background-attachment: fixed;
         }
         #root { min-height: 100vh; }
-        .glass-panel { background: rgba(11, 32, 64, 0.68); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(125, 211, 252, 0.22); }
-        .frost-card { background: linear-gradient(180deg, rgba(14,40,78,0.92), rgba(9,24,48,0.94)); border: 1px solid rgba(125,211,252,0.22); box-shadow: 0 20px 60px -20px rgba(2,15,40,0.8), inset 0 1px 0 rgba(186,230,253,0.08); }
-        .glow-blue { box-shadow: 0 0 24px rgba(56,189,248,0.35); }
+        .glass-panel { background: rgba(255,255,255,0.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(37,99,235,0.28); }
+        .frost-card { background: linear-gradient(180deg, #ffffff, #eaf2ff); border: 1px solid rgba(37,99,235,0.28); box-shadow: 0 22px 50px -22px rgba(20,55,120,0.45), inset 0 1px 0 rgba(255,255,255,0.95); }
+        .glow-blue { box-shadow: 0 0 22px rgba(37,99,235,0.38); }
         .pipe-bend { transform-origin: left center; transition: transform 0.1s linear; }
         ::-webkit-scrollbar { width: 9px; }
-        ::-webkit-scrollbar-track { background: #0a2244; }
-        ::-webkit-scrollbar-thumb { background: #38bdf8; border-radius: 5px; }
+        ::-webkit-scrollbar-track { background: #b7d0f2; }
+        ::-webkit-scrollbar-thumb { background: #1d4ed8; border-radius: 5px; }
         .gauge-needle { transform-origin: bottom center; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* ---- remap คลาสโทนเข้ม -> โทนสว่าง (เว้นแผงไดอะแกรม/จอ LCD ให้ยังเข้ม) ---- */
+        .bg-slate-800, [class*="bg-slate-800/"] { background-color: #ffffff !important; }
+        .bg-slate-900, [class*="bg-slate-900/"], .bg-slate-950 { background-color: #e0ecff !important; }
+        .bg-slate-700 { background-color: #d5e5fd !important; }
+        /* แผงไดอะแกรม (ผังวงจร/ท่อ/ต่อสายเกจ) ยังเป็นพื้นเข้มเพื่อให้เส้นสีอ่านง่าย */
+        .diagram-board { background-color: #0b1a30 !important; border-color: #2b4a72 !important; }
+        .diagram-board .bg-slate-800\/40, .diagram-board [class*="bg-slate-800/"] { background-color: rgba(30,41,59,0.4) !important; }
+        .diagram-board .border-slate-700, .diagram-board .border-slate-600 { border-color: #334f74 !important; }
+        .diagram-board .text-slate-400, .diagram-board .text-slate-500 { color: #94a3b8 !important; }
+        .diagram-board .bg-slate-700 { background-color: #334155 !important; }
+        .diagram-board .text-slate-300 { color: #cbd5e1 !important; }
+        [class*="bg-[#08213f]"], [class*="bg-[#0a1f3c]"], [class*="bg-[#0b2547]"], [class*="bg-[#0e2850]"], [class*="bg-[#0b2547]/"] { background-color: #cfe0fb !important; }
+        input, select { background-color: #ffffff !important; border-color: #7ba7e6 !important; color: #0f2440 !important; }
+        input::placeholder { color: #64748b !important; }
+        .border-slate-500, .border-slate-600, .border-slate-700, .border-slate-800 { border-color: #a9c8ef !important; }
+        .border-slate-950 { border-color: #8fb4e6 !important; }
+        .text-white { color: #0b2140 !important; }
+        .text-slate-200, .text-slate-300 { color: #2b3a52 !important; }
+        .text-slate-400, .text-slate-500, .text-slate-600 { color: #5b6b85 !important; }
+        [class*="text-sky-100"], [class*="text-sky-200"], [class*="text-cyan-100"] { color: #1e40af !important; }
+        [class*="text-cyan-200/"], [class*="text-sky-200/"], [class*="text-sky-300/"], [class*="text-cyan-300/"] { color: #2f5aa8 !important; }
+        .text-blue-300, .text-sky-300, .text-cyan-300, .text-cyan-400 { color: #1e40af !important; }
+        .text-blue-400, .text-blue-200, .text-sky-200 { color: #1d4ed8 !important; }
+        .text-emerald-400, .text-emerald-300, .text-green-400 { color: #047857 !important; }
+        .text-yellow-400, .text-yellow-300 { color: #a1550a !important; }
+        .text-red-400, .text-red-300, .text-red-200 { color: #dc2626 !important; }
+
+        /* ปุ่มพื้นสีทึบ -> ตัวอักษรขาว (ยกเว้นพิลล์โปร่งแสง …/20) */
+        .bg-blue-600:not([class*="bg-blue-600/"]), .bg-blue-500:not([class*="bg-blue-500/"]),
+        .bg-emerald-600:not([class*="bg-emerald-600/"]), .bg-emerald-500:not([class*="bg-emerald-500/"]),
+        .bg-cyan-600:not([class*="bg-cyan-600/"]), .bg-red-600:not([class*="bg-red-600/"]),
+        [class*="from-blue-600"], [class*="from-blue-500"], [class*="from-emerald-600"], [class*="from-orange-600"], [class*="from-red-600"],
+        span[class*="bg-yellow-6"], span[class*="bg-sky-6"], span[class*="bg-emerald-7"], span[class*="bg-emerald-6"] {
+            color: #ffffff !important;
+        }
+        /* ปุ่มพื้นสว่าง (ไซแอน/ฟ้าอ่อน) -> ตัวอักษรเข้ม */
+        [class*="from-sky-400"], [class*="from-cyan-300"], [class*="bg-sky-400"] { color: #062033 !important; }
 
         .pulse-red { animation: pulseRed 2s infinite; }
         @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
@@ -220,7 +260,7 @@
             <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3 px-3 py-2.5 sm:p-4 glass-panel sticky top-0 z-50 shadow-[0_8px_30px_-10px_rgba(2,15,40,0.7)] border-b border-sky-400/20">
                 <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0" onClick={goMap}>
                     <i className="fa-solid fa-snowflake text-sky-300 text-2xl sm:text-3xl drop-shadow-[0_0_10px_rgba(56,189,248,0.6)] group-hover:rotate-180 transition-transform duration-700 shrink-0"></i>
-                    <h1 className="text-base sm:text-xl font-extrabold leading-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-sky-300 to-cyan-300 truncate">ระบบสอบปฏิบัติช่างเครื่องทำความเย็น</h1>
+                    <h1 className="text-base sm:text-xl font-extrabold leading-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-blue-700 to-blue-600 truncate">ระบบสอบปฏิบัติช่างเครื่องทำความเย็น</h1>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-center shrink-0">
                     {isTeacher && (
@@ -903,7 +943,7 @@
                     )}
 
                     <div className="hscroll -mx-2 sm:mx-0">
-                    <div className="relative w-full min-w-[580px] h-[440px] sm:h-[600px] bg-slate-900 rounded-xl border border-slate-600 p-3 sm:p-4 shadow-inner overflow-hidden select-none"
+                    <div className="relative diagram-board w-full min-w-[580px] h-[440px] sm:h-[600px] bg-slate-900 rounded-xl border border-slate-600 p-3 sm:p-4 shadow-inner overflow-hidden select-none"
                          onContextMenu={(e) => { e.preventDefault(); cancelDraft(); }}>
                         <svg className={`absolute top-0 left-0 w-full h-full z-10 ${draft ? 'cursor-crosshair' : ''}`} viewBox="0 0 100 100" preserveAspectRatio="none" onClick={svgClick} onMouseMove={svgMove} onTouchMove={svgMove}>
                             {/* เส้นที่วางแล้ว */}
@@ -1382,7 +1422,7 @@
                     )}
 
                     <div className="hscroll -mx-2 sm:mx-0">
-                    <div className="relative w-full min-w-[580px] h-[440px] sm:h-[600px] bg-slate-900 rounded-xl border border-slate-600 p-3 sm:p-4 shadow-inner overflow-hidden select-none"
+                    <div className="relative diagram-board w-full min-w-[580px] h-[440px] sm:h-[600px] bg-slate-900 rounded-xl border border-slate-600 p-3 sm:p-4 shadow-inner overflow-hidden select-none"
                          onContextMenu={(e) => { e.preventDefault(); cancelDraft(); }}>
                         <svg className={`absolute top-0 left-0 w-full h-full z-10 ${draft ? 'cursor-crosshair' : ''}`} viewBox="0 0 100 100" preserveAspectRatio="none" onClick={svgClick} onMouseMove={svgMove} onTouchMove={svgMove}>
                             {routes.map(r => {
@@ -1572,7 +1612,7 @@
                         {hookMsg && <div className="bg-red-900/30 border border-red-500/50 rounded-lg px-3 py-2 text-sm text-red-300 mb-2"><i className="fa-solid fa-triangle-exclamation mr-2"></i>{hookMsg}</div>}
 
                         <div className="hscroll -mx-2 sm:mx-0">
-                        <div className="relative w-full min-w-[440px] h-[400px] sm:h-[520px] bg-slate-900 rounded-xl border border-slate-600 p-3 sm:p-4 shadow-inner overflow-hidden select-none">
+                        <div className="relative diagram-board w-full min-w-[440px] h-[400px] sm:h-[520px] bg-slate-900 rounded-xl border border-slate-600 p-3 sm:p-4 shadow-inner overflow-hidden select-none">
                             <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
                                 {conns.map((c, i) => {
                                     const a = NODES[c[0]], b = NODES[c[1]];
@@ -1826,7 +1866,7 @@
                         {hookMsg && <div className="bg-red-900/30 border border-red-500/50 rounded-lg px-3 py-2 text-sm text-red-300 mb-2"><i className="fa-solid fa-triangle-exclamation mr-2"></i>{hookMsg}</div>}
 
                         <div className="hscroll -mx-2 sm:mx-0">
-                        <div className="relative w-full min-w-[440px] h-[400px] sm:h-[520px] bg-slate-900 rounded-xl border border-slate-600 p-3 sm:p-4 shadow-inner overflow-hidden select-none">
+                        <div className="relative diagram-board w-full min-w-[440px] h-[400px] sm:h-[520px] bg-slate-900 rounded-xl border border-slate-600 p-3 sm:p-4 shadow-inner overflow-hidden select-none">
                             <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
                                 {conns.map((c, i) => {
                                     const a = NODES[c[0]], b = NODES[c[1]];
@@ -2005,7 +2045,7 @@
             return (
                 <div className="max-w-4xl mx-auto px-4 py-8 animate-fade-in">
                     <div className="text-center mb-8">
-                        <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-sky-300 to-cyan-300 mb-2 leading-[1.4] py-1 drop-shadow-[0_0_18px_rgba(56,189,248,0.25)]">แผนที่ภารกิจช่างเครื่องทำความเย็น</h2>
+                        <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-800 via-blue-700 to-blue-600 mb-2 leading-[1.4] py-1 drop-shadow-[0_0_18px_rgba(56,189,248,0.25)]">แผนที่ภารกิจช่างเครื่องทำความเย็น</h2>
                         <p className="text-sky-200/70">ปฏิบัติให้ผ่านทีละด่าน — ปลดล็อกด่านถัดไปเมื่อได้ {PASS}% ขึ้นไป</p>
                     </div>
 
@@ -2605,7 +2645,7 @@
                         <div className="absolute -top-16 -right-16 w-40 h-40 bg-sky-400/20 rounded-full blur-3xl pointer-events-none"></div>
                         <div className="text-center mb-5 relative">
                             <i className="fa-solid fa-snowflake text-sky-300 text-5xl mb-3 drop-shadow-[0_0_16px_rgba(56,189,248,0.65)]"></i>
-                            <h1 className="text-lg font-extrabold leading-snug text-transparent bg-clip-text bg-gradient-to-r from-sky-200 to-cyan-300">ระบบสอบปฏิบัติช่างเครื่องทำความเย็น</h1>
+                            <h1 className="text-lg font-extrabold leading-snug text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-blue-600">ระบบสอบปฏิบัติช่างเครื่องทำความเย็น</h1>
                         </div>
                         {notice && <div className="mb-4 text-xs text-red-200 bg-red-900/40 border border-red-500/50 rounded-lg px-3 py-2 relative"><i className="fa-solid fa-ban mr-2"></i>{notice}</div>}
                         <div className="grid grid-cols-2 gap-2 mb-5 bg-[#08213f] p-1 rounded-xl border border-sky-400/20 relative">
