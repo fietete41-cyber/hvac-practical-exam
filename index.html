@@ -202,7 +202,7 @@
         const MISSIONS = [
             { id: 'prep',   title: 'ด่าน 1 · เตรียมงานเครื่องทำความเย็น', icon: 'fa-toolbox',         desc: 'เบิกเครื่องมือ อุปกรณ์วงจร ไฟฟ้า และวัสดุ ให้ครบสำหรับงานประกอบระบบเครื่องทำความเย็น', time: 150 },
             { id: 'braze',  title: 'ด่าน 2 · ลำดับงานเชื่อมท่อ',        icon: 'fa-fire-burner',       desc: 'เรียงขั้นตอนการเชื่อมท่อทองแดงแบบไร้เขม่า',      time: 120 },
-            { id: 'wire',   title: 'ด่าน 3 · ต่อวงจรไฟฟ้าตู้เย็น',        icon: 'fa-bolt',              desc: 'เดินวงจร เทอร์โมสตัท–โอเวอร์โหลด–เคอร์เรนต์รีเลย์–คอมเพรสเซอร์ พร้อมสวิตช์ประตูและหลอดไฟ', time: 180 },
+            { id: 'wire',   title: 'ด่าน 3 · ต่อวงจรไฟฟ้าตู้เย็น',        icon: 'fa-bolt',              desc: 'เดินวงจร เทอร์โมสตัท–โอเวอร์โหลด–เคอร์เรนต์รีเลย์–คอมเพรสเซอร์ พร้อมสวิตช์ประตูและหลอดไฟ แล้วคล้องคลิปแอมป์วัดกระแสคอมเพรสเซอร์', time: 200 },
             { id: 'pipe',   title: 'ด่าน 4 · เดินท่อน้ำยา',             icon: 'fa-diagram-project',   desc: 'ต่อท่อน้ำยาให้ครบวงจร: คอมเพรสเซอร์ → คอยล์ร้อน → ดรายเออร์ → แคปทิ้ว → คอยล์เย็น → กลับคอมเพรสเซอร์', time: 200 },
             { id: 'vacuum', title: 'ด่าน 5 · ทำสุญญากาศ',              icon: 'fa-gauge',             desc: 'ต่อสายเกจเข้าปั๊มแวคคั่มและระบบให้ถูกต้อง แล้วดึงสุญญากาศ กดหยุดให้ได้ค่าตามมาตรฐาน', time: 200 },
             { id: 'charge', title: 'ด่าน 6 · เลือก & เติมน้ำยา',        icon: 'fa-temperature-half',  desc: 'เลือกถังน้ำยา → ต่อสายเกจ → เติมน้ำยาให้เข็มนิ่งและ Superheat อยู่ในเกณฑ์ (คะแนนรวม 3 ขั้น)', time: 240 }
@@ -649,12 +649,38 @@
             return seen;
         };
 
+        // ---- คลิปแอมป์มิเตอร์: คะแนนตามสายที่เลือกคล้องเพื่อวัดกระแสคอมเพรสเซอร์ ----
+        const CLAMP_TIER = (pk) => {
+            if (pk === pairKey('OLP2', 'CC') || pk === pairKey('CR', 'N'))
+                return { pts: 100, amps: 1.42, note: 'เยี่ยม! คล้องสายขั้วรัน (C/R) วัดกระแสคอมเพรสเซอร์ขณะทำงานได้ตรงจุด' };
+            if (pk === pairKey('L', 'TH1') || pk === pairKey('TH2', 'OLP1'))
+                return { pts: 85, amps: 1.42, note: 'ใช้ได้ — สายก่อนเข้าคอมเพรสเซอร์ วัดกระแสได้ (จุดมาตรฐานคือสายขั้ว C)' };
+            if (pk === pairKey('RLYR', 'CC'))
+                return { pts: 75, amps: 1.42, note: 'สายรีเลย์–ขั้ว C อยู่ในเส้นทางกระแสรัน วัดได้ แต่ไม่ใช่จุดมาตรฐาน' };
+            if (pk === pairKey('RLYS', 'CS') || pk === pairKey('CS', 'N') || pk === pairKey('CS', 'RLYR'))
+                return { pts: 20, amps: 0.15, note: 'สายขดสตาร์ท (S) — ขณะคอมทำงานปกติแทบไม่มีกระแส อ่านได้เกือบ 0 A' };
+            if (pk === pairKey('L', 'DS1') || pk === pairKey('DS1', 'DS2') || pk === pairKey('DS2', 'BL1') || pk === pairKey('BL1', 'BL2') || pk === pairKey('BL2', 'N'))
+                return { pts: 10, amps: 0.12, note: 'สายวงจรหลอดไฟ ไม่ใช่กระแสของคอมเพรสเซอร์' };
+            if (pk === pairKey('E', 'CB'))
+                return { pts: 0, amps: 0, note: 'สายดิน — ปกติไม่มีกระแสไหล อ่านได้ 0 A' };
+            return { pts: 30, amps: 0, note: 'จุดนี้ไม่ตรงกับการวัดกระแสคอมเพรสเซอร์' };
+        };
+        const routeMidPt = (P) => {
+            let total = 0; const seg = [];
+            for (let i = 0; i < P.length - 1; i++) { const l = Math.hypot(P[i + 1][0] - P[i][0], P[i + 1][1] - P[i][1]); seg.push(l); total += l; }
+            let d = total / 2;
+            for (let i = 0; i < seg.length; i++) { if (d <= seg[i]) { const t = seg[i] ? d / seg[i] : 0; return [P[i][0] + (P[i + 1][0] - P[i][0]) * t, P[i][1] + (P[i + 1][1] - P[i][1]) * t]; } d -= seg[i]; }
+            return P[P.length - 1];
+        };
+
         const GameWiring = ({ mode, onFinish, wireKey }) => {
             const [connections, setConnections] = useState([]); // {id,a,b,waypoints:[[x,y]...]}
             const [draft, setDraft] = useState(null);           // {from, points:[[x,y]...]}  เส้นที่กำลังลาก
             const [mouse, setMouse] = useState(null);           // [x,y] viewBox — ปลายเส้นตัวอย่าง
             const [wireSel, setWireSel] = useState(null);       // id เส้นที่เลือก
             const [junctions, setJunctions] = useState([]);     // "id1~id2" จุดจั๊ม
+            const [phase, setPhase] = useState('wire');         // wire | clamp
+            const [clampWire, setClampWire] = useState(null);   // id เส้นที่คล้องคลิปแอมป์
             const [result, setResult] = useState(null);
             const nodes = WIRE_NODES;
             const correctPairs = (wireKey && wireKey.length) ? wireKey : WIRE_CORRECT;
@@ -672,7 +698,7 @@
             };
 
             const handleNodeClick = (id) => {
-                if (result) return;
+                if (result || phase === 'clamp') return;
                 if (!draft) { setDraft({ from: id, points: [] }); setWireSel(null); setMouse(null); return; }
                 if (id === draft.from) { setDraft(null); setMouse(null); return; }
                 setConnections(cs => [...cs, { id: uid(), a: draft.from, b: id, waypoints: draft.points }]);
@@ -691,6 +717,7 @@
             }, [draft]);
 
             const delWire = (id) => {
+                if (phase === 'clamp') return;
                 setConnections(cs => cs.filter(c => c.id !== id));
                 setJunctions(js => js.filter(k => !k.split('~').includes(id)));
                 setWireSel(null);
@@ -747,6 +774,7 @@
 
             const svgMove = (e) => { if (draft) setMouse(toVB(e)); };
             const svgClick = (e) => {
+                if (phase === 'clamp') return;
                 const [x, y] = toVB(e);
                 if (draft) { setDraft(d => ({ ...d, points: [...d.points, [x, y]] })); return; }
                 const near = crossings.find(cr => Math.hypot(cr.x - x, cr.y - y) < 3);
@@ -757,6 +785,7 @@
             };
             const wireClick = (e, r) => {
                 e.stopPropagation();
+                if (phase === 'clamp') { setClampWire(r.id); return; }
                 if (draft) {
                     // ลากมาแตะเส้นอื่น = จั๊มเข้าที่จุดนั้น (ไม่ต้องลากไปถึงขั้วอุปกรณ์)
                     const [x, y] = toVB(e);
@@ -767,15 +796,15 @@
                 setWireSel(prev => prev === r.id ? null : r.id);
             };
 
-            const checkWiring = () => {
+            // ประเมินการต่อวงจร (คืนค่า ไม่ setResult เอง)
+            const evalWiring = () => {
                 const wireHas = (a, b) => connections.some(c => (c.a === a && c.b === b) || (c.b === a && c.a === b));
                 const conn = (a, b) => bfsNet(adj, a).has(b);
                 const correctSet = new Set(correctPairs.map(([a, b]) => pairKey(a, b)));
                 const isCorrect = (a, b) => correctSet.has(pairKey(a, b));
 
                 if (conn('L', 'N') || wireHas('CC', 'CR') || wireHas('CC', 'CS') || wireHas('CS', 'CR')) {
-                    setResult({ score: 0, msg: '💥 ลัดวงจร (Short Circuit)! ไฟ L ถึงนิวทรัล N หรือลัดขั้ว C/S/R ของคอมเพรสเซอร์' });
-                    return;
+                    return { short: true, score: 0, msg: '💥 ลัดวงจร (Short Circuit)! ไฟ L ถึงนิวทรัล N หรือลัดขั้ว C/S/R ของคอมเพรสเซอร์' };
                 }
 
                 let s = 100;
@@ -800,15 +829,34 @@
                 }
 
                 s = Math.max(0, Math.round(s));
-                setResult({
-                    score: s,
+                return {
+                    short: false, score: s,
                     msg: msgs.length ? msgs.join(' · ')
                         : 'วงจรถูกต้อง! ไฟผ่านเทอร์โมสตัท → โอเวอร์โหลด → รีเลย์ เข้าขั้ว C, ขดรัน C–R ครบวงจรที่นิวทรัล, รีเลย์ต่อขดสตาร์ทที่ขั้ว S และมีสายดินที่ตัวถัง'
-                });
+                };
+            };
+
+            const clampRoute = routes.find(r => r.id === clampWire) || null;
+            const clampTier = clampRoute ? CLAMP_TIER(pairKey(clampRoute.a, clampRoute.b)) : null;
+
+            // เฟส 1: ตรวจวงจร แล้วไปเฟสวัดกระแส (หรือฟาวล์ทันทีถ้าลัดวงจร)
+            const goMeasure = () => {
+                const w = evalWiring();
+                if (w.short) { setResult({ score: 0, msg: w.msg }); return; }
+                setDraft(null); setMouse(null); setWireSel(null);
+                setPhase('clamp');
+            };
+            // เฟส 2: รวมคะแนน วงจร 75% + จุดวัดกระแส 25%
+            const finalize = () => {
+                const w = evalWiring();
+                if (w.short) { setResult({ score: 0, msg: w.msg }); return; }
+                const ci = clampTier || { pts: 0, note: 'ยังไม่ได้คล้องคลิปแอมป์' };
+                const total = Math.round(w.score * 0.75 + ci.pts * 0.25);
+                setResult({ score: total, msg: w.msg + ' · 🔌 จุดวัดกระแส: ' + ci.note });
             };
 
             if (result) return <MissionEnd score={result.score} maxScore={100} feedback={result.msg}
-                onBack={() => onFinish(result.score, result.msg)} retry={() => { setResult(null); setConnections([]); setDraft(null); setMouse(null); setWireSel(null); setJunctions([]); }} />;
+                onBack={() => onFinish(result.score, result.msg)} retry={() => { setResult(null); setConnections([]); setDraft(null); setMouse(null); setWireSel(null); setJunctions([]); setPhase('wire'); setClampWire(null); }} />;
 
             const selRoute = routes.find(r => r.id === wireSel);
             const dFrom = draft ? nodes[draft.from] : null;
@@ -816,9 +864,17 @@
 
             return (
                 <div className="max-w-5xl mx-auto p-4 sm:p-6">
-                    <h2 className="text-2xl font-bold text-yellow-400 mb-2">ต่อวงจรไฟฟ้าตู้เย็น</h2>
-                    <p className="text-slate-300 mb-1 text-sm">คลิก “จุดต่อ” เพื่อเริ่มลากสาย → คลิกใน “พื้นที่ว่าง” เพื่อหักมุมนำสายหลบเส้นอื่น (เห็นเส้นก่อนวาง) → คลิก “จุดต่อ” ปลายทางเพื่อจบเส้น · ESC / คลิกขวา / คลิกจุดเริ่มซ้ำ = ยกเลิก · คลิกที่เส้นที่วางแล้ว = เลือก/ลบ · แตะจุดที่สายตัดกัน = สลับ ยกข้าม ↔ จุดจั๊ม</p>
+                    <h2 className="text-2xl font-bold text-yellow-400 mb-2">ต่อวงจรไฟฟ้าตู้เย็น{phase === 'clamp' && <span className="text-cyan-300"> — วัดกระแสด้วยคลิปแอมป์</span>}</h2>
+                    {phase === 'wire'
+                        ? <p className="text-slate-300 mb-1 text-sm">คลิก “จุดต่อ” เพื่อเริ่มลากสาย → คลิกใน “พื้นที่ว่าง” เพื่อหักมุมนำสายหลบเส้นอื่น (เห็นเส้นก่อนวาง) → คลิก “จุดต่อ” ปลายทางเพื่อจบเส้น · ESC / คลิกขวา / คลิกจุดเริ่มซ้ำ = ยกเลิก · คลิกที่เส้นที่วางแล้ว = เลือก/ลบ · แตะจุดที่สายตัดกัน = สลับ ยกข้าม ↔ จุดจั๊ม</p>
+                        : <p className="text-cyan-200 mb-1 text-sm"><i className="fa-solid fa-gauge-high mr-1"></i> คล้องคลิปแอมป์รอบ “สายเส้นเดียว” ที่ต้องการวัดกระแสคอมเพรสเซอร์ — คลิกที่เส้นสายในผังเพื่อเลือกจุดวัด (เปลี่ยนได้เรื่อยๆ ก่อนกดยืนยัน)</p>}
                     {akCustom && <p className="mb-2 text-xs text-yellow-300 bg-yellow-900/20 border border-yellow-700/40 rounded px-2 py-1 inline-block"><i className="fa-solid fa-user-pen mr-1"></i> เฉลยการต่อสายด่านนี้ถูกปรับแต่งโดยผู้สอน</p>}
+                    {phase === 'clamp' && (
+                        <div className="flex items-center justify-between gap-3 flex-wrap mb-2 bg-slate-800 border border-cyan-500/50 rounded-lg px-3 py-2">
+                            <span className="text-cyan-100 text-sm"><i className="fa-solid fa-bolt-lightning mr-2 text-cyan-300"></i>{clampRoute ? <>คล้องที่สาย: <b>{WIRE_FULLNAME[clampRoute.a] || clampRoute.a}</b> ↔ <b>{clampRoute.tap ? 'จุดจั๊มบนสายอื่น' : (WIRE_FULLNAME[clampRoute.b] || clampRoute.b)}</b></> : 'ยังไม่ได้เลือกจุดวัด — คลิกที่สายในผัง'}</span>
+                            <span className="font-mono font-black text-2xl text-cyan-300 bg-slate-900 border border-cyan-500/40 rounded-lg px-4 py-1 shrink-0">{clampRoute ? clampTier.amps.toFixed(2) : '--.--'}<span className="text-sm text-cyan-400/70"> A</span></span>
+                        </div>
+                    )}
                     <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2 text-xs text-slate-400">
                         <span>ต่อแล้ว {connections.length} เส้น</span>
                         <span><span className="inline-block w-4 h-1 rounded align-middle mr-1" style={{ background: '#8B4513' }}></span> สายไฟ L</span>
@@ -850,9 +906,9 @@
                             {routes.map(r => {
                                 const col = colorOf(r.a, r.b);
                                 const sel = wireSel === r.id;
-                                const dim = wireSel && !sel;
+                                const dim = (wireSel && !sel) || (phase === 'clamp' && clampWire && clampWire !== r.id);
                                 const d = 'M ' + r.pts.map(p => p.join(' ')).join(' L ');
-                                return <path key={'w' + r.id} d={d} fill="none" stroke={col} strokeWidth={sel ? 6 : 3.5} strokeLinecap="round" strokeLinejoin="round" opacity={dim ? 0.25 : 0.95} vectorEffect="non-scaling-stroke" pointerEvents="none" />;
+                                return <path key={'w' + r.id} d={d} fill="none" stroke={col} strokeWidth={sel ? 6 : 3.5} strokeLinecap="round" strokeLinejoin="round" opacity={dim ? 0.22 : 0.95} vectorEffect="non-scaling-stroke" pointerEvents="none" />;
                             })}
                             {/* จุดหักมุมของเส้นที่เลือก */}
                             {selRoute && selRoute.wp.map((p, k) => <circle key={'wp' + k} cx={p[0]} cy={p[1]} r="1.5" fill="#facc15" pointerEvents="none" />)}
@@ -887,8 +943,19 @@
                             {/* พื้นที่คลิกของแต่ละเส้น */}
                             {routes.map(r => {
                                 const d = 'M ' + r.pts.map(p => p.join(' ')).join(' L ');
-                                return <path key={'hit' + r.id} d={d} fill="none" stroke="transparent" strokeWidth="14" vectorEffect="non-scaling-stroke" style={{ cursor: 'pointer' }} onClick={(e) => wireClick(e, r)} />;
+                                return <path key={'hit' + r.id} d={d} fill="none" stroke="transparent" strokeWidth={phase === 'clamp' ? 18 : 14} vectorEffect="non-scaling-stroke" style={{ cursor: 'pointer' }} onClick={(e) => wireClick(e, r)} />;
                             })}
+                            {/* คลิปแอมป์ที่คล้องอยู่ */}
+                            {phase === 'clamp' && clampRoute && (() => {
+                                const [mx, my] = routeMidPt(clampRoute.pts);
+                                return <g pointerEvents="none">
+                                    <circle cx={mx} cy={my} r="4.6" fill="rgba(34,211,238,0.12)" stroke="#22d3ee" strokeWidth="2.2" strokeDasharray="16 7" vectorEffect="non-scaling-stroke">
+                                        <animateTransform attributeName="transform" type="rotate" from={`0 ${mx} ${my}`} to={`360 ${mx} ${my}`} dur="6s" repeatCount="indefinite" />
+                                    </circle>
+                                    <circle cx={mx} cy={my} r="1.2" fill="#22d3ee" />
+                                    <line x1={mx} y1={my + 4.6} x2={mx} y2={my + 9} stroke="#22d3ee" strokeWidth="2.4" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                                </g>;
+                            })()}
                         </svg>
 
                         {/* กรอบอุปกรณ์ — จัดวางเป็นตาราง ไม่ซ้อนทับกัน */}
@@ -924,11 +991,21 @@
                     </div>
                     </div>
 
-                    {mode === 'practice' && <p className="text-yellow-400 text-xs mt-3"><i className="fa-solid fa-lightbulb"></i> ไฟหลัก: ปลั๊ก L → เทอร์โมสตัท → โอเวอร์โหลด → คอม C | รีเลย์(R) → คอม C | รีเลย์(S) → คอม S | คอม R → ปลั๊ก N | ปลั๊ก E → ตัวถังคอม | ไฟส่องสว่าง: ปลั๊ก L → สวิตช์ประตู → หลอดไฟ → ปลั๊ก N — เชื่อมถึง N = ฟ้า, ถึง E = เขียว, ที่เหลือ (L) = น้ำตาล · ลากปลายสายไปแตะ “เส้นอื่นสีเดียวกัน” เพื่อจั๊มได้เลย ไม่ต้องลากถึงขั้วอุปกรณ์เสมอไป</p>}
+                    {mode === 'practice' && phase === 'wire' && <p className="text-yellow-400 text-xs mt-3"><i className="fa-solid fa-lightbulb"></i> ไฟหลัก: ปลั๊ก L → เทอร์โมสตัท → โอเวอร์โหลด → คอม C | รีเลย์(R) → คอม C | รีเลย์(S) → คอม S | คอม R → ปลั๊ก N | ปลั๊ก E → ตัวถังคอม | ไฟส่องสว่าง: ปลั๊ก L → สวิตช์ประตู → หลอดไฟ → ปลั๊ก N — เชื่อมถึง N = ฟ้า, ถึง E = เขียว, ที่เหลือ (L) = น้ำตาล · ลากปลายสายไปแตะ “เส้นอื่นสีเดียวกัน” เพื่อจั๊มได้เลย ไม่ต้องลากถึงขั้วอุปกรณ์เสมอไป</p>}
+                    {mode === 'practice' && phase === 'clamp' && <p className="text-cyan-300 text-xs mt-3"><i className="fa-solid fa-lightbulb"></i> วัดกระแสคอมเพรสเซอร์ขณะทำงาน = คล้องคลิปแอมป์รอบ “สายขั้วรัน (C)” — คือสายที่ออกจากโอเวอร์โหลดเข้าขั้ว C หรือสายขดรัน C→N (คล้องได้แค่สายเดียว ห้ามคล้องรวมหลายเส้น)</p>}
 
-                    <button onClick={checkWiring} className="w-full py-4 mt-5 bg-yellow-600 hover:bg-yellow-500 text-xl font-bold rounded-xl shadow-lg transition-colors text-black">
-                        <i className="fa-solid fa-plug-circle-bolt mr-2"></i> จ่ายไฟทดสอบวงจร
-                    </button>
+                    {phase === 'wire' ? (
+                        <button onClick={goMeasure} className="w-full py-4 mt-5 bg-yellow-600 hover:bg-yellow-500 text-lg sm:text-xl font-bold rounded-xl shadow-lg transition-colors text-black">
+                            <i className="fa-solid fa-plug-circle-bolt mr-2"></i> จ่ายไฟ → ไปวัดกระแสด้วยคลิปแอมป์
+                        </button>
+                    ) : (
+                        <div className="flex gap-2 mt-5">
+                            <button onClick={() => { setPhase('wire'); setClampWire(null); }} className="px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 border border-slate-500 text-slate-200 text-sm font-semibold shrink-0"><i className="fa-solid fa-arrow-left mr-1"></i> กลับไปแก้วงจร</button>
+                            <button onClick={finalize} disabled={!clampWire} className="flex-1 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed text-lg font-bold rounded-xl shadow-lg transition-colors text-white">
+                                <i className="fa-solid fa-clipboard-check mr-2"></i> ยืนยันจุดวัด · จบด่าน
+                            </button>
+                        </div>
+                    )}
                 </div>
             );
         };
